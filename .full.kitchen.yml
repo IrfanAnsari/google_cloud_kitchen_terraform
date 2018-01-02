@@ -1,0 +1,54 @@
+---
+# The driver is the bridge between Test Kitchen and Terraform. It manages the state of the Terraform root module by shelling out and running Terraform commands.
+# kitchen create -> Initializing the Terraform Working Directory & Creating a Test Terraform Workspace
+# kitchen destroy -> Initializing the Terraform Working Directory -> Selecting the Test Terraform Workspace -> Destroying the Terraform State -> Selecting the Default Terraform Workspace -> Deleting the Test Terraform Workspace
+driver:
+  name: terraform
+  backend_configurations:
+    address: demo.consul.io
+    path: example_app/terraform_state
+
+  root_module_directory: test/fixtures/europe_west2
+  parellelism: 4
+  color: true
+  command_timeout: 1200
+  lock_timeout: 10
+  plugin_directory: /path/to/terraform/plugins
+
+  variable_files:
+    - /path/to/first/variable/file
+    - /path/to/second/variable/file
+
+# The provisioner utilizes the driver to apply changes to the Terraform state in order to reach the desired configuration of the root module.
+#  kitchen converge - Selecting the Test Terraform Workspace -> Updating the Terraform Dependency Modules -> Validating the Terraform Root Module -> Applying the Terraform State Changes -> Retrieving the Terraform Output
+provisioner:
+  name: terraform
+
+transport:
+  name: ssh
+
+#The verifier utilizes the InSpec infrastructure testing framework to verify the behaviour and state of resources in the Terraform state.
+# kitchen verify
+verifier:
+  name: terraform
+  groups:
+    -
+      name: remote
+      attributes:
+        overridden_security_group: security_group
+      controls:
+        - running_instance
+      hostnames: test_target_public_dns
+      port: 22
+      ssh_key: /path/to/an/ssh/key
+      username: ubuntu
+    -
+      name: local
+      controls:
+        - state_file
+
+platforms:
+  - name: ubuntu
+
+suites:
+  - name: example

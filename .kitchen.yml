@@ -1,0 +1,39 @@
+---
+driver:
+  name: terraform
+  root_module_directory: test/fixtures/europe_west2
+  parellelism: 4
+
+
+provisioner:
+  name: terraform
+
+transport:
+  name: ssh
+
+verifier:
+  name: terraform
+  groups:
+    -
+      name: remote
+      atrributes:
+        overridden_project_id:  project_id
+      controls:
+        - project_created
+        - running_service
+        - project_id
+      hostnames: test_target_public_dns
+      port: 22
+      ssh_key: ~/.ssh/id_rsa_terraform
+      username: ubuntu
+    -
+      name: local
+      controls:
+        - state_file
+
+
+platforms:
+  - name: ubuntu
+
+suites:
+  - name: example
